@@ -1,18 +1,7 @@
 <resources>
-    <!-- Base application theme. -->
-    <style name="Theme.BluetoothBroadcasting" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowLightStatusBar">true</item>
+    <!-- Base application theme. Used only before Compose renders. -->
+    <style name="Theme.BluetoothBroadcasting" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-    </style>
-
-    <style name="Theme.BluetoothBroadcasting.Dialog" parent="Theme.Material3.DayNight.Dialog">
-        <item name="android:windowMinWidthMajor">85%</item>
-        <item name="android:windowMinWidthMinor">85%</item>
-    </style>
-
-    <style name="Theme.BluetoothBroadcasting.Icon" parent="">
-        <item name="android:tint">@color/black</item>
-        <item name="android:backgroundTint">@android:color/transparent</item>
     </style>
 </resources>

@@ -2,153 +2,67 @@
 
 ## Overview
 
-Android app for broadcasting messages via Bluetooth.
+Android app for broadcasting messages via Bluetooth using Google Nearby Connections API.
 
-* Written using Kotlin and MVVM pattern
-* Minimum Android 6.0 (API 23)
+* Written in Kotlin with MVVM pattern
+* UI built with Jetpack Compose
+* Minimum Android 7.0 (API 25)
 
-## How to use
+## Features
 
-Here are some instructions if you would like to use my Bluetooth server and client classes.
+* **Server mode** — advertises a service and broadcasts text messages to all connected clients
+* **Client mode** — discovers nearby servers, connects, and displays received messages
 
-### BluetoothServer
+## How it works
 
-Bluetooth server exposes RFCOMM service, manages client connections and allows broadcasting messages
-to all connected clients.
+The app uses
+the [Google Nearby Connections API](https://developers.google.com/nearby/connections/overview) for
+device discovery and communication over Bluetooth/Wi-Fi.
 
-1. Constructor and operations:
+### Server
 
-``` kotlin
-val server = BluetoothServer(
-    bluetoothAdapter,
-    SERVICE_NAME,
-    SERVICE_UUID
-)
+1. Launch the app and tap **Server**
+2. Tap **Start server** — the device starts advertising
+3. Type a message and tap **Send message** — it is broadcast to all connected clients
+4. Tap **Stop server** to stop advertising and disconnect all clients
 
-// Recommended use on IO thread
-server.startloop()
-server.stop()
+### Client
 
-server.broadcastMessage("Something")
-```
-
-2. Bluetooth server has several listeners available:
-
-``` kotlin
-bluetoothServer.setOnConnectListener { clientSocket: BluetoothSocket ->
-    // Do something
-}
-
-bluetoothServer.setOnDisconnectListener { clientSocket: BluetoothSocket ->
-    // Do something
-}
-
-bluetoothServer.setOnStateChangeListener { isStopped: Boolean ->
-    // Do something
-}
-```
-
-### BluetoothClient
-
-Bluetooth client allows connection to server and handles incoming messages.
-
-1. Constructor and operations:
-
-``` kotlin
-// Create bluetooth socket using server device and server service ID
-val bluetoothSocket = device.createRfcommSocketToServiceRecord(SERVICE_UUID)
-val client = BluetoothClient(bluetoothSocket)
-client.bluetoothClient.setOnDataListener { message: ByteArray ->
-    // Do something
-}
-  
-// Recommended use on IO thread
-client.startloop()
-client.disconnect()
-
-```
-
-2. Bluetooth client has several listeners available:
-
-``` kotlin
-client.setOnDataListener { message: ByteArray ->
-  // Do something
-}
-
-client.setOnConnectionSuccessListener { serverSocket: BluetoothSocket ->
-  // Do something
-}
-
-client.setOnConnectionFailureListener { serverSocket: BluetoothSocket ->
-  // Do something
-}
-
-client.setOnDisconnectionListener { serverSocket: BluetoothSocket ->
-  // Do something
-}
-```
-
-### BluetoothServiceDiscoveryManager
-
-A service class used for acquiring paired bluetooth devices which host desired service.
-
-1. Constructor:
-
-``` kotlin
-BluetoothServiceDiscoveryManagerImpl(context)
-```
-
-2. You must set which service UUIDs to expect:
-
-```
-serviceDiscoveryManager.setExpectedUuids(/* collection of UUIDs */)
-```
-
-3. You must register a receiver (without doing it the manager cannot handle *fetchUuidsWithSdp*
-   results):
-
-``` kotlin
-activity.registerReceiver(
-    serviceDiscoveryManager.getBroadcastReceiver(),
-    IntentFilter(BluetoothDevice.ACTION_UUID)
-)
-```
-
-4. Discover services on given devices:
-
-``` kotlin
-serviceDiscoveryManager.discoverServicesInDevices(pairedDevices)
-```
-
-5. You can observe devices with desired services:
-
-``` kotlin
-serviceDiscoveryManager.getBluetoothDevices()
-    .onEach { collection -> /* Do something */ }
-    .flowOn(Dispatchers.Default)
-    .launchIn(lifecycleScope)
-```
+1. Launch the app and tap **Client**
+2. Tap **Connect to server** — the device starts discovering nearby servers
+3. Select a server from the list
+4. Received messages are displayed on screen
+5. Tap **Disconnect** to end the session
 
 ## Libraries Used
 
-* [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) - for managing
-  background threads with simplified code and reducing needs for callbacks.
-* [ViewBinding](https://developer.android.com/topic/libraries/view-binding) - Easy, type safe, null
-  safe access to layout elements.
-* [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel) - Store
-  UI-related data that isn't destroyed on app rotations. Easily schedule asynchronous tasks for
-  optimal execution.
-* [RecyclerView](https://developer.android.com/guide/topics/ui/layout/recyclerview?gclsrc=aw.ds&gclid=CjwKCAjwrPCGBhALEiwAUl9X03wCNk7bhvoxs_okW86jFVgc92QelSerqKyYmfEM54CbHOsKc3tYyxoCgRcQAvD_BwE)
-  - for custom list views.
-* [Hilt](https://developer.android.com/training/dependency-injection/hilt-android) - Dependency
-  injection library recommended by Google.
+* [Kotlin Coroutines / Flow](https://kotlinlang.org/docs/coroutines-overview.html) — reactive state
+  management with `StateFlow` and `SharedFlow`
+* [Jetpack Compose](https://developer.android.com/jetpack/compose) — declarative UI toolkit
+* [Navigation Compose](https://developer.android.com/jetpack/compose/navigation) — in-app navigation
+* [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel) — UI state that
+  survives configuration changes
+* [Hilt](https://developer.android.com/training/dependency-injection/hilt-android) — dependency
+  injection
+* [Google Nearby Connections](https://developers.google.com/nearby/connections/overview) —
+  Bluetooth/Wi-Fi device discovery and communication
+
+## Permissions
+
+The app requests the following permissions at runtime depending on the Android version:
+
+| Permission                                                   | SDK range |
+|--------------------------------------------------------------|-----------|
+| `BLUETOOTH`, `BLUETOOTH_ADMIN`                               | ≤ API 30  |
+| `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`             | ≤ API 32  |
+| `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` | ≥ API 31  |
+| `NEARBY_WIFI_DEVICES`                                        | ≥ API 33  |
 
 ## Stay in touch
 
 - Author - Tomasz Kiljańczyk
-- Mail - [asz.czyk.dev@gmail.com](mailto:asz.czyk.dev@gmail.com)
-- LinkedIn
-  - [https://www.linkedin.com/in/tomasz-kilja%C5%84czyk-6b6ba3130](https://www.linkedin.com/in/tomasz-kilja%C5%84czyk-6b6ba3130)
+- Mail - [thomas.kiljanczyk.dev@gmail.com](mailto:thomas.kiljanczyk.dev@gmail.com)
+- LinkedIn - [https://www.linkedin.com/in/thomas-kiljanczyk-dev/)
 
 ## License
 

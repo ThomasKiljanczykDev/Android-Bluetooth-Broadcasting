@@ -1,35 +1,69 @@
 package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.nearby.connection.ConnectionsClient
+import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
+import com.google.android.gms.nearby.connection.DiscoveryOptions
+import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
+import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.Constants
 import javax.inject.Inject
 
+interface PickDeviceDialogUiState {
+    val discoveredDevices: List<GmsNearbyServerDeviceItem>
+}
+
+internal class MutablePickDeviceDialogUiState : PickDeviceDialogUiState {
+    override var discoveredDevices by mutableStateOf<List<GmsNearbyServerDeviceItem>>(emptyList())
+}
+
 @HiltViewModel
-class PickDeviceDialogViewModel @Inject constructor() : ViewModel() {
+class PickDeviceDialogViewModel @Inject constructor(
+    private val connectionsClient: ConnectionsClient
+) : ViewModel() {
     companion object {
         const val TAG: String = "PickDeviceDialogViewModel"
     }
 
-    private val _serverEndpointId: MutableStateFlow<String?> = MutableStateFlow(null)
-    val serverEndpointId: StateFlow<String?>
-        get() = _serverEndpointId
+    private val _state = MutablePickDeviceDialogUiState()
+    val state: PickDeviceDialogUiState get() = _state
 
-    private val _message: MutableSharedFlow<String> = MutableSharedFlow(replay = 1)
-    val message: Flow<String>
-        get() = _message
+    private val deviceMap = mutableMapOf<String, GmsNearbyServerDeviceItem>()
 
-    fun resetPickedDevice() {
-        _serverEndpointId.value = null
+    fun startDiscovery() {
+        val discoveryOptions = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
+        connectionsClient.startDiscovery(
+            Constants.SERVICE_UUID.toString(),
+            object : EndpointDiscoveryCallback() {
+                override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
+                    deviceMap[endpointId] = GmsNearbyServerDeviceItem(info.endpointName, endpointId)
+                    _state.discoveredDevices = deviceMap.values.toList()
+                }
+
+                override fun onEndpointLost(endpointId: String) {
+                    deviceMap.remove(endpointId)
+                    _state.discoveredDevices = deviceMap.values.toList()
+                }
+            },
+            discoveryOptions
+        ).addOnFailureListener { e ->
+            Log.e(TAG, "Failed to start discovering", e)
+        }
     }
 
-    fun pickDevice(item: GmsNearbyServerDeviceItem) {
-        _serverEndpointId.value = item.endpointId
-        Log.i(TAG, "Picked : ${item.deviceName}")
+    fun stopDiscovery() {
+        connectionsClient.stopDiscovery()
+        deviceMap.clear()
+        _state.discoveredDevices = emptyList()
     }
 
+    override fun onCleared() {
+        stopDiscovery()
+        super.onCleared()
+    }
 }
