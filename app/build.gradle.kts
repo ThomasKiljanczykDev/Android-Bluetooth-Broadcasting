@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
 }
 
@@ -13,8 +12,8 @@ android {
     defaultConfig {
         applicationId = "dev.thomas_kiljanczyk.bluetoothbroadcasting"
         minSdk = 25
-        compileSdk = 35
-        targetSdk = 35
+        compileSdk = 36
+        targetSdk = 36
         versionCode = major * 100000000 + minor * 10000 + patch
         versionName = "$major.$minor.$patch"
     }
@@ -34,11 +33,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlinOptions {
-        jvmTarget = "21"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     namespace = "dev.thomas_kiljanczyk.bluetoothbroadcasting"
 }
