@@ -4,20 +4,27 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.nearby.connection.ConnectionInfo
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.NearbyConnectionLifecycleCallback
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.SimpleNearbyPayloadCallback
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+interface ClientUiState {
+    val status: ClientUiStatus
+    val receivedText: String
+}
+
+internal class MutableClientUiState : ClientUiState {
+    override var status by mutableStateOf<ClientUiStatus>(ClientUiStatus.Disconnected)
+    override var receivedText by mutableStateOf("")
+}
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
@@ -27,12 +34,8 @@ class ClientViewModel @Inject constructor(
         private const val TAG = "ClientViewModel"
     }
 
-    private val _clientStatus: MutableStateFlow<Pair<Int, String?>> =
-        MutableStateFlow(Pair(R.string.activity_client_disconnected, null))
-    val clientStatus: StateFlow<Pair<Int, String?>> = _clientStatus
-
-    private val _receivedText: MutableSharedFlow<String> = MutableSharedFlow(replay = 1)
-    val receivedText: Flow<String> = _receivedText
+    private val _state = MutableClientUiState()
+    val state: ClientUiState get() = _state
 
     private inner class ClientConnectionLifecycleCallback : NearbyConnectionLifecycleCallback() {
         override fun onConnectionInitiated(
@@ -40,7 +43,7 @@ class ClientViewModel @Inject constructor(
         ) {
             super.onConnectionInitiated(endpointId, connectionInfo)
             connectionsClient.acceptConnection(endpointId, SimpleNearbyPayloadCallback { payload ->
-                _receivedText.tryEmit(payload?.decodeToString() ?: "")
+                _state.receivedText = payload?.decodeToString() ?: ""
             })
         }
 
@@ -49,18 +52,19 @@ class ClientViewModel @Inject constructor(
         ) {
             if (result.status.isSuccess) {
                 val endpointName = connectionInfo?.endpointName
-                _clientStatus.value = Pair(
-                    if (endpointName != null) R.string.activity_client_connected
-                    else R.string.activity_client_connected_unknown, endpointName
-                )
+                _state.status = if (endpointName != null) {
+                    ClientUiStatus.Connected(endpointName)
+                } else {
+                    ClientUiStatus.ConnectedUnknown
+                }
             } else {
-                _clientStatus.value = Pair(R.string.activity_client_disconnected, null)
+                _state.status = ClientUiStatus.Disconnected
             }
         }
 
         override fun onDisconnected(endpointId: String, connectionInfo: ConnectionInfo?) {
             connectionsClient.disconnectFromEndpoint(endpointId)
-            _clientStatus.value = Pair(R.string.activity_client_disconnected, null)
+            _state.status = ClientUiStatus.Disconnected
         }
     }
 
@@ -76,5 +80,4 @@ class ClientViewModel @Inject constructor(
         connectionsClient.stopAllEndpoints()
         Log.i(TAG, "Client disconnected")
     }
-
 }

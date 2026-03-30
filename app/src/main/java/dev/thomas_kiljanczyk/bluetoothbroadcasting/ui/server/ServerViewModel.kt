@@ -4,6 +4,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.nearby.connection.AdvertisingOptions
 import com.google.android.gms.nearby.connection.ConnectionInfo
@@ -12,16 +15,22 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.Strategy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.Constants
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.NearbyConnectionLifecycleCallback
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.SimpleNearbyPayloadCallback
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+interface ServerUiState {
+    val isServerOn: Boolean
+    val isStartingServer: Boolean
+}
+
+internal class MutableServerUiState : ServerUiState {
+    override var isServerOn by mutableStateOf(false)
+    override var isStartingServer by mutableStateOf(false)
+}
 
 @HiltViewModel
 class ServerViewModel @Inject constructor(
@@ -31,11 +40,12 @@ class ServerViewModel @Inject constructor(
         const val TAG = "ServerViewModel"
     }
 
-    private val _serverStatusFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val serverOnFlow: StateFlow<Boolean> = _serverStatusFlow
+    private val _state = MutableServerUiState()
+    val state: ServerUiState get() = _state
 
-    private val _messageFlow: MutableSharedFlow<Pair<Int, String?>> = MutableSharedFlow(replay = 1)
-    val messageFlow: Flow<Pair<Int, String?>> = _messageFlow
+    private val _messageFlow: MutableSharedFlow<ServerUiMessage> = MutableSharedFlow(replay = 1)
+    val messageFlow: Flow<ServerUiMessage> = _messageFlow
+
     private val connectedEndpointIds = mutableSetOf<String>()
 
     private inner class ServerConnectionLifecycleCallback : NearbyConnectionLifecycleCallback() {
@@ -51,20 +61,20 @@ class ServerViewModel @Inject constructor(
         ) {
             if (result.status.isSuccess) {
                 val endpointName = connectionInfo?.endpointName
-                val messageResId =
-                    if (endpointName != null) R.string.activity_server_connected else R.string.activity_server_connected_unknown
-                _messageFlow.tryEmit(Pair(messageResId, endpointName))
-
+                _messageFlow.tryEmit(
+                    if (endpointName != null) ServerUiMessage.Connected(endpointName)
+                    else ServerUiMessage.ConnectedUnknown
+                )
                 connectedEndpointIds.add(endpointId)
             }
         }
 
         override fun onDisconnected(endpointId: String, connectionInfo: ConnectionInfo?) {
             val endpointName = connectionInfo?.endpointName
-            val messageResId =
-                if (endpointName != null) R.string.activity_server_disconnected else R.string.activity_server_disconnected_unknown
-
-            _messageFlow.tryEmit(Pair(messageResId, endpointName))
+            _messageFlow.tryEmit(
+                if (endpointName != null) ServerUiMessage.Disconnected(endpointName)
+                else ServerUiMessage.DisconnectedUnknown
+            )
             connectedEndpointIds.remove(endpointId)
         }
     }
@@ -72,6 +82,7 @@ class ServerViewModel @Inject constructor(
     @SuppressLint("InlinedApi")
     @RequiresPermission(anyOf = [Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH])
     fun startServer(deviceName: String) {
+        _state.isStartingServer = true
         val advertisingOptions = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
         connectionsClient.startAdvertising(
@@ -79,19 +90,20 @@ class ServerViewModel @Inject constructor(
             Constants.SERVICE_UUID.toString(),
             ServerConnectionLifecycleCallback(),
             advertisingOptions
-        ).addOnSuccessListener { unused: Void? ->
-            _serverStatusFlow.value = true
+        ).addOnSuccessListener { _: Void? ->
+            _state.isStartingServer = false
+            _state.isServerOn = true
         }.addOnFailureListener { e: Exception? ->
             Log.e(TAG, "Failed to start server", e)
-            _serverStatusFlow.value = false
+            _state.isStartingServer = false
+            _state.isServerOn = false
         }
     }
-
 
     fun stopServer() {
         connectionsClient.stopAdvertising()
         connectionsClient.stopAllEndpoints()
-        _serverStatusFlow.value = false
+        _state.isServerOn = false
     }
 
     fun broadcastMessage(message: String) {
@@ -104,5 +116,4 @@ class ServerViewModel @Inject constructor(
             Log.e(TAG, "Failed to send message", e)
         }
     }
-
 }

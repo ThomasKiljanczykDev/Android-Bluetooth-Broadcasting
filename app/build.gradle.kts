@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -29,7 +31,7 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
+        compose = true
     }
 
     compileOptions {
@@ -42,16 +44,25 @@ android {
 dependencies {
     // App dependencies
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.android.material)
     implementation(libs.play.services.nearby)
 
     // AndroidX
     implementation(libs.androidx.coreKtx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.activityKtx)
     implementation(libs.androidx.annotation)
-    implementation(libs.androidx.constraintLayout)
-    implementation(libs.androidx.recyclerView)
+
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.core)
+    implementation(libs.compose.activity)
+    implementation(libs.compose.viewmodel)
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.serialization.json)
+    debugImplementation(libs.compose.ui.tooling)
+    implementation(libs.compose.ui.tooling.preview)
 
     // Hilt
     implementation(libs.hilt)
