@@ -10,6 +10,7 @@
 
     <string name="activity_client_connect_to_server">Connect to server</string>
     <string name="activity_client_disconnected">Disconnected</string>
+    <string name="activity_client_connected_unknown">Connected</string>
     <string name="activity_client_connected">Connected (%s)</string>
     <string name="activity_client_no_content">No content yet</string>
     <string name="activity_client_disconnect">Disconnect</string>
@@ -22,8 +23,18 @@
     <string name="activity_server_stop_server">Stop server</string>
     <string name="activity_server_message_sent">Message has been sent</string>
     <string name="activity_server_message_not_sent">You must start server first</string>
+    <string name="activity_server_connected">%s has disconnected</string>
+    <string name="activity_server_connected_unknown">Unknown device has disconnected</string>
+    <string name="activity_server_disconnected">%s has disconnected</string>
+    <string name="activity_server_disconnected_unknown">Unknown device has disconnected</string>
 
     <string name="dialog_fragment_close">Close</string>
+
+    <string name="dialog_fragment_no_play_services_message">
+        This app requires Google Play Services in order to work.
+        Please ensure Google Play Services are installed on your device.
+    </string>
+    <string name="dialog_fragment_no_play_services_exit_app">Exit app</string>
 
     <string name="dialog_fragment_pick_device_title">Pick server device</string>
     <string name="dialog_fragment_permissions_denied_message">
@@ -42,7 +53,7 @@
     <string name="dialog_fragment_permission_close_app">Close app</string>
 
 
-    <string name="placeholder_bt_device">Bluetooth Device</string>
+    <string name="placeholder_gms_nearby_server_device">Bluetooth Device</string>
 
     <string name="item_img_desc_available">Device available</string>
     <string name="item_img_desc_not_available">Device not available</string>
