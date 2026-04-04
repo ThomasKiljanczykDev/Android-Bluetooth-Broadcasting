@@ -62,7 +62,7 @@ The app requests the following permissions at runtime depending on the Android v
 
 - Author - Tomasz Kiljańczyk
 - Mail - [thomas.kiljanczyk.dev@gmail.com](mailto:thomas.kiljanczyk.dev@gmail.com)
-- LinkedIn - [https://www.linkedin.com/in/thomas-kiljanczyk-dev/)
+- LinkedIn - [https://www.linkedin.com/in/thomas-kiljanczyk-dev/](www.linkedin.com/in/thomas-kiljanczyk-dev)
 
 ## License
 
