@@ -20,6 +20,19 @@ android {
         versionName = "$major.$minor.$patch"
     }
 
+    flavorDimensions += "transport"
+    productFlavors {
+        create("bluetooth") {
+            dimension = "transport"
+            applicationIdSuffix = ".bluetooth"
+            isDefault = true
+        }
+        create("nearby") {
+            dimension = "transport"
+            applicationIdSuffix = ".nearby"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -45,7 +58,8 @@ dependencies {
     // App dependencies
     implementation(libs.kotlinx.coroutines.android)
     implementation(project(":transport:core"))
-    implementation(project(":transport:nearby"))
+    "bluetoothImplementation"(project(":transport:bluetooth"))
+    "nearbyImplementation"(project(":transport:nearby"))
 
     // AndroidX
     implementation(libs.androidx.coreKtx)
