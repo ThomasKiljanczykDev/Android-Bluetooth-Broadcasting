@@ -83,6 +83,10 @@ dependencies {
     implementation(libs.hilt)
     ksp(libs.hiltCompiler)
 
+    testImplementation(testFixtures(project(":transport:core")))
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+
     // LeakCanary
 //    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
 }
