@@ -2,61 +2,101 @@
 
 ## Overview
 
-Android app for broadcasting messages via Bluetooth using Google Nearby Connections API.
+Android app broadcasting text messages from one server to many clients.
 
-* Written in Kotlin with MVVM pattern
-* UI built with Jetpack Compose
-* Minimum Android 7.0 (API 25)
+* Two interchangeable transports, selected at build time:
+  * **bluetooth** (default) — hand-rolled classic Bluetooth RFCOMM, see [transport/bluetooth](transport/bluetooth/README.md)
+  * **nearby** — [Google Nearby Connections](https://developers.google.com/nearby/connections/overview)
+* Kotlin, MVVM, Jetpack Compose
+* Minimum Android 7.1 (API 25)
 
-## Features
+## Transports
 
-* **Server mode** — advertises a service and broadcasts text messages to all connected clients
-* **Client mode** — discovers nearby servers, connects, and displays received messages
+|                  | bluetooth                                    | nearby                                    |
+|------------------|----------------------------------------------|-------------------------------------------|
+| Module           | `:transport:bluetooth`                       | `:transport:nearby`                       |
+| Play Services    | Not required                                 | Required                                  |
+| Pairing          | Required (system Bluetooth settings)         | Not required                              |
+| Radios           | Bluetooth                                    | Bluetooth + Wi-Fi                         |
+| Discovery        | Bonded devices, SDP service UUID lookup      | Nearby advertising/discovery (P2P_STAR)   |
+| Link             | RFCOMM socket                                | Nearby-managed (Bluetooth, BLE, Wi-Fi)    |
+| Clients          | ~4–7 (piconet limit)                         | Many                                      |
+| Runtime perms    | `BLUETOOTH_CONNECT` (API 31+)                | See [Permissions](#permissions)           |
 
-## How it works
+## Building
 
-The app uses
-the [Google Nearby Connections API](https://developers.google.com/nearby/connections/overview) for
-device discovery and communication over Bluetooth/Wi-Fi.
+* Android Studio: **Build Variants** → `bluetoothDebug` / `nearbyDebug`
+* CLI:
+  ```
+  ./gradlew assembleBluetoothDebug
+  ./gradlew assembleNearbyDebug
+  ./gradlew testBluetoothDebugUnitTest testNearbyDebugUnitTest :transport:bluetooth:testDebugUnitTest
+  ```
+* Application IDs: `….bluetooth`, `….nearby` — both install side by side.
+
+## Architecture
+
+```
+:app ─────────────────────────────────────► :transport:core
+ ├─ bluetoothImplementation ─► :transport:bluetooth ─► :transport:core
+ └─ nearbyImplementation ────► :transport:nearby ────► :transport:core
+```
+
+* `:transport:core` — interfaces, `RemoteDevice`, state/event types, `TransportRequirements`, fakes (`testFixtures`)
+  * `BroadcastServer` — `start()`, `stop()`, `broadcast(String)`, `state`, `events`
+  * `BroadcastClient` — `connect(RemoteDevice)`, `disconnect()`, `state`, `messages`
+  * `ServerDiscovery` — `discover()`: cold `Flow`, discovery runs while collected
+  * `TransportRequirements` — runtime permissions, required radios, availability check
+* Transport modules: implementations, Hilt bindings, manifest permissions (merged into the app)
+* `:app` — Compose UI and ViewModels; depends on `:transport:core` only
+* Implementations are `@ViewModelScoped`; resources released when the owning ViewModel is cleared
+
+## Usage
 
 ### Server
 
-1. Launch the app and tap **Server**
-2. Tap **Start server** — the device starts advertising
-3. Type a message and tap **Send message** — it is broadcast to all connected clients
-4. Tap **Stop server** to stop advertising and disconnect all clients
+1. **Server** → **Start server**
+2. Type message → **Send message**: broadcast to all connected clients
+3. **Stop server**: disconnects all clients
 
 ### Client
 
-1. Launch the app and tap **Client**
-2. Tap **Connect to server** — the device starts discovering nearby servers
-3. Select a server from the list
-4. Received messages are displayed on screen
-5. Tap **Disconnect** to end the session
-
-## Libraries Used
-
-* [Kotlin Coroutines / Flow](https://kotlinlang.org/docs/coroutines-overview.html) — reactive state
-  management with `StateFlow` and `SharedFlow`
-* [Jetpack Compose](https://developer.android.com/jetpack/compose) — declarative UI toolkit
-* [Navigation Compose](https://developer.android.com/jetpack/compose/navigation) — in-app navigation
-* [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel) — UI state that
-  survives configuration changes
-* [Hilt](https://developer.android.com/training/dependency-injection/hilt-android) — dependency
-  injection
-* [Google Nearby Connections](https://developers.google.com/nearby/connections/overview) —
-  Bluetooth/Wi-Fi device discovery and communication
+1. bluetooth only: pair client and server devices in system Bluetooth settings
+2. **Client** → **Connect to server** → pick server
+3. Received messages are displayed
+4. **Disconnect** ends the session
 
 ## Permissions
 
-The app requests the following permissions at runtime depending on the Android version:
+Declared by the transport module; requested at app start.
 
-| Permission                                                   | SDK range |
-|--------------------------------------------------------------|-----------|
-| `BLUETOOTH`, `BLUETOOTH_ADMIN`                               | ≤ API 30  |
-| `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION`             | ≤ API 32  |
-| `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` | ≥ API 31  |
-| `NEARBY_WIFI_DEVICES`                                        | ≥ API 33  |
+**bluetooth**
+
+| Permission                        | SDK range | Type        |
+|-----------------------------------|-----------|-------------|
+| `BLUETOOTH`, `BLUETOOTH_ADMIN`    | ≤ API 30  | Install     |
+| `BLUETOOTH_CONNECT`               | ≥ API 31  | Runtime     |
+
+**nearby** ([source](https://developers.google.com/nearby/connections/android/get-started))
+
+| Permission                                                   | SDK range   | Type    |
+|--------------------------------------------------------------|-------------|---------|
+| `ACCESS_WIFI_STATE`                                          | all         | Install |
+| `CHANGE_WIFI_STATE`                                          | ≤ API 31    | Install |
+| `BLUETOOTH`, `BLUETOOTH_ADMIN`                               | ≤ API 30    | Install |
+| `ACCESS_COARSE_LOCATION`                                     | ≤ API 28    | Runtime |
+| `ACCESS_FINE_LOCATION`                                       | API 29–31   | Runtime |
+| `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` | ≥ API 31    | Runtime |
+| `NEARBY_WIFI_DEVICES`                                        | ≥ API 33    | Runtime |
+| `ACCESS_LOCAL_NETWORK`                                       | ≥ API 37    | Runtime |
+
+## Libraries Used
+
+* [Kotlin Coroutines / Flow](https://kotlinlang.org/docs/coroutines-overview.html)
+* [Jetpack Compose](https://developer.android.com/jetpack/compose), [Navigation Compose](https://developer.android.com/jetpack/compose/navigation)
+* [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel)
+* [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)
+* [Google Nearby Connections](https://developers.google.com/nearby/connections/overview) — nearby flavor only
 
 ## Stay in touch
 
