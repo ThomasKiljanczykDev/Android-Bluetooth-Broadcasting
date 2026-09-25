@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +20,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.AppAlertDialog
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.GmsNearbyServerDeviceItem
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.MutablePickDeviceDialogUiState
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.PickDeviceDialogUiState
@@ -52,7 +52,7 @@ fun PickDeviceDialog(
     onDevicePicked: (endpointId: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_fragment_pick_device_title)) },
         text = {

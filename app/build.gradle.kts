@@ -14,8 +14,8 @@ android {
     defaultConfig {
         applicationId = "dev.thomas_kiljanczyk.bluetoothbroadcasting"
         minSdk = 25
-        compileSdk = 36
-        targetSdk = 36
+        compileSdk = 37
+        targetSdk = 37
         versionCode = major * 100000000 + minor * 10000 + patch
         versionName = "$major.$minor.$patch"
     }

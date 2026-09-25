@@ -1,5 +1,6 @@
 package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +63,7 @@ class PickDeviceDialogViewModel @Inject constructor(
         _state.discoveredDevices = emptyList()
     }
 
+    @SuppressLint("EmptySuperCall")
     override fun onCleared() {
         stopDiscovery()
         super.onCleared()
