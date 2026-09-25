@@ -1,19 +1,16 @@
 package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.util.Log
-import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.nearby.connection.ConnectionInfo
-import com.google.android.gms.nearby.connection.ConnectionResolution
-import com.google.android.gms.nearby.connection.ConnectionsClient
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.NearbyConnectionLifecycleCallback
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.SimpleNearbyPayloadCallback
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastClient
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ClientState
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 interface ClientUiState {
@@ -28,56 +25,25 @@ internal class MutableClientUiState : ClientUiState {
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
-    private val connectionsClient: ConnectionsClient
+    private val client: BroadcastClient
 ) : ViewModel() {
-    companion object {
-        private const val TAG = "ClientViewModel"
-    }
-
     private val _state = MutableClientUiState()
     val state: ClientUiState get() = _state
 
-    private inner class ClientConnectionLifecycleCallback : NearbyConnectionLifecycleCallback() {
-        override fun onConnectionInitiated(
-            endpointId: String, connectionInfo: ConnectionInfo
-        ) {
-            super.onConnectionInitiated(endpointId, connectionInfo)
-            connectionsClient.acceptConnection(endpointId, SimpleNearbyPayloadCallback { payload ->
-                _state.receivedText = payload?.decodeToString() ?: ""
-            })
-        }
-
-        override fun onConnectionResult(
-            endpointId: String, connectionInfo: ConnectionInfo?, result: ConnectionResolution
-        ) {
-            if (result.status.isSuccess) {
-                val endpointName = connectionInfo?.endpointName
-                _state.status = if (endpointName != null) {
-                    ClientUiStatus.Connected(endpointName)
-                } else {
-                    ClientUiStatus.ConnectedUnknown
-                }
-            } else {
-                _state.status = ClientUiStatus.Disconnected
-            }
-        }
-
-        override fun onDisconnected(endpointId: String, connectionInfo: ConnectionInfo?) {
-            connectionsClient.disconnectFromEndpoint(endpointId)
-            _state.status = ClientUiStatus.Disconnected
-        }
+    init {
+        client.state.onEach { _state.status = it.toUiStatus() }.launchIn(viewModelScope)
+        client.messages.onEach { _state.receivedText = it }.launchIn(viewModelScope)
     }
 
-    @SuppressLint("InlinedApi")
-    @RequiresPermission(anyOf = [Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH])
-    fun startClient(endpointId: String, deviceName: String) {
-        connectionsClient.requestConnection(
-            deviceName, endpointId, ClientConnectionLifecycleCallback()
-        )
-    }
+    fun startClient(device: RemoteDevice) = client.connect(device)
 
-    fun stopClient() {
-        connectionsClient.stopAllEndpoints()
-        Log.i(TAG, "Client disconnected")
-    }
+    fun stopClient() = client.disconnect()
+}
+
+private fun ClientState.toUiStatus(): ClientUiStatus = when (this) {
+    ClientState.Disconnected -> ClientUiStatus.Disconnected
+    ClientState.Connecting -> ClientUiStatus.Connecting
+    is ClientState.ConnectionFailed -> ClientUiStatus.ConnectionFailed
+    is ClientState.Connected -> device.name?.let(ClientUiStatus::Connected)
+        ?: ClientUiStatus.ConnectedUnknown
 }

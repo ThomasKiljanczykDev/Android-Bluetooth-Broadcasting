@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.ClientScreen
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.ClientViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.main.MainScreen
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.main.MainViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.server.ServerScreen
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.server.ServerViewModel
 
@@ -16,6 +17,7 @@ fun AppNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = MainRoute) {
         composable<MainRoute> {
             MainScreen(
+                requirements = hiltViewModel<MainViewModel>().requirements,
                 onNavigateToClient = { navController.navigate(ClientRoute) },
                 onNavigateToServer = { navController.navigate(ServerRoute) }
             )

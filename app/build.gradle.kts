@@ -44,7 +44,8 @@ android {
 dependencies {
     // App dependencies
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.play.services.nearby)
+    implementation(project(":transport:core"))
+    implementation(project(":transport:nearby"))
 
     // AndroidX
     implementation(libs.androidx.coreKtx)
