@@ -1,17 +1,17 @@
 [versions]
 agp = "9.4.1"
-kotlin = "2.3.20"
-ksp = "2.3.6"
-hilt = "2.59.2"
-coroutines = "1.10.2"
-androidXAnotation = "1.9.1"
-androidXCore = "1.18.0"
+kotlin = "2.4.20"
+ksp = "2.3.12"
+hilt = "2.60.1"
+coroutines = "1.11.0"
+androidXAnotation = "1.11.0"
+androidXCore = "1.19.1"
 androidXActivityKtx = "1.13.0"
-playServicesNearby = "19.3.0"
-composeBom = "2026.03.01"
-navigationCompose = "2.9.7"
-hiltNavigationCompose = "1.3.0"
-kotlinxSerializationJson = "1.10.0"
+playServicesNearby = "19.5.0"
+composeBom = "2026.09.00"
+navigationCompose = "2.10.2"
+hiltNavigationCompose = "1.4.0"
+kotlinxSerializationJson = "1.11.0"
 
 [libraries]
 gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
