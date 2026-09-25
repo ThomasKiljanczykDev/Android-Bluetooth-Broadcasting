@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -32,10 +31,10 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.application.NearbyPermissions
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.AppAlertDialog
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastingTheme
 import kotlin.system.exitProcess
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onNavigateToClient: () -> Unit,
@@ -73,7 +72,7 @@ fun MainScreen(
     }
 
     if (showNoPlayServicesDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = {},
             text = { Text(stringResource(R.string.dialog_fragment_no_play_services_message)) },
             confirmButton = {
@@ -108,6 +107,18 @@ fun MainScreen(
         )
     }
 
+    MainScreenContent(
+        onNavigateToClient = onNavigateToClient,
+        onNavigateToServer = onNavigateToServer
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenContent(
+    onNavigateToClient: () -> Unit,
+    onNavigateToServer: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(stringResource(R.string.app_name)) })
@@ -139,7 +150,7 @@ fun MainScreen(
 @Composable
 private fun MainScreenPreview() {
     BluetoothBroadcastingTheme {
-        MainScreen(
+        MainScreenContent(
             onNavigateToClient = {},
             onNavigateToServer = {}
         )
