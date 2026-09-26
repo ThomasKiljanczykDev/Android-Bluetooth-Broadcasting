@@ -108,7 +108,7 @@ Declared by each transport module, merged into the app manifest. Requested per t
 | Permission                                                   | SDK range   | Type    |
 |--------------------------------------------------------------|-------------|---------|
 | `ACCESS_WIFI_STATE`                                          | all         | Install |
-| `CHANGE_WIFI_STATE`                                          | ≤ API 31    | Install |
+| `CHANGE_WIFI_STATE`                                          | all         | Install |
 | `BLUETOOTH`, `BLUETOOTH_ADMIN`                               | ≤ API 30    | Install |
 | `ACCESS_COARSE_LOCATION`                                     | ≤ API 28, 31 | Runtime |
 | `ACCESS_FINE_LOCATION`                                       | API 29–31   | Runtime |

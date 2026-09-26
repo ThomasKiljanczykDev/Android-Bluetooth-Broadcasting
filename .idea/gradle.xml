@@ -12,9 +12,9 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/transport" />
             <option value="$PROJECT_DIR$/transport/ble" />
-            <option value="$PROJECT_DIR$/transport/bluetooth" />
             <option value="$PROJECT_DIR$/transport/core" />
             <option value="$PROJECT_DIR$/transport/nearby" />
+            <option value="$PROJECT_DIR$/transport/rfcomm" />
           </set>
         </option>
       </GradleProjectSettings>
