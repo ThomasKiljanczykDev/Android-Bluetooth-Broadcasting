@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleStartEffect
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.Availability
@@ -34,6 +36,7 @@ fun TransportGate(
     content: @Composable (unavailableReason: Int?, runGated: (action: () -> Unit) -> Unit) -> Unit
 ) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
 
     var unavailableReason by remember { mutableStateOf<Int?>(null) }
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -87,7 +90,7 @@ fun TransportGate(
         PermissionsRequestDialog(
             onProceed = {
                 showPermissionsRequestDialog = false
-                permissionLauncher.launch(requirements.runtimePermissions)
+                permissionLauncher.launch(requirements.missingPermissions(context))
             },
             onCancel = {
                 showPermissionsRequestDialog = false
@@ -114,15 +117,19 @@ fun TransportGate(
     content(unavailableReason) { action ->
         pendingAction = action
         promptedRadios.clear()
-        if (requirements.areAllPermissionsGranted(context)) {
-            radioCheckRequest++
-        } else {
-            showPermissionsRequestDialog = true
+        val missing = requirements.missingPermissions(context)
+        when {
+            missing.isEmpty() -> radioCheckRequest++
+            // Rationale only after a denial; otherwise the system grants or prompts.
+            activity != null && missing.any {
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
+            } -> showPermissionsRequestDialog = true
+            else -> permissionLauncher.launch(missing)
         }
     }
 }
 
-private fun TransportRequirements.areAllPermissionsGranted(context: Context): Boolean =
-    runtimePermissions.all {
-        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-    }
+private fun TransportRequirements.missingPermissions(context: Context): Array<String> =
+    runtimePermissions.filter {
+        ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+    }.toTypedArray()
