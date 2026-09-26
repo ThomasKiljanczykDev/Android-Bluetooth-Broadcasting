@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 
-class FakeBroadcastServer : BroadcastServer {
+class FakeBroadcastServer(
+    override val maxMessageBytes: Int? = null,
+    override val hint: Int? = null
+) : BroadcastServer {
     override val state = MutableStateFlow(ServerState.Stopped)
     override val events = MutableSharedFlow<ServerEvent>(extraBufferCapacity = 16)
 

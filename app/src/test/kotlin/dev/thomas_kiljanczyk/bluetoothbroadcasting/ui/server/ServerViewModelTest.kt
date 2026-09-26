@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -71,5 +72,30 @@ class ServerViewModelTest {
         assertEquals(1, server.startCount)
         assertEquals(listOf("hello"), server.broadcasts)
         assertEquals(1, server.stopCount)
+    }
+
+    @Test
+    fun `exposes transport limits`() {
+        assertNull(viewModel.state.maxMessageBytes)
+        assertNull(viewModel.state.hint)
+        assertTrue(viewModel.state.fits("x".repeat(10_000)))
+
+        val limited = ServerViewModel(FakeBroadcastServer(maxMessageBytes = 5, hint = 1))
+        assertEquals(5, limited.state.maxMessageBytes)
+        assertEquals(1, limited.state.hint)
+    }
+
+    @Test
+    fun `drops messages over byte limit`() {
+        val limitedServer = FakeBroadcastServer(maxMessageBytes = 5)
+        val limited = ServerViewModel(limitedServer)
+
+        assertTrue(limited.state.fits("héll"))
+        assertFalse(limited.state.fits("héllo"))
+
+        limited.broadcastMessage("héll")
+        limited.broadcastMessage("héllo")
+
+        assertEquals(listOf("héll"), limitedServer.broadcasts)
     }
 }

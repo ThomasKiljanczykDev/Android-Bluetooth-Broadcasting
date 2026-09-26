@@ -2,7 +2,7 @@ package dev.thomas_kiljanczyk.bluetoothbroadcasting.transport
 
 import androidx.annotation.StringRes
 
-enum class Radio { Bluetooth, WiFi }
+enum class Radio { Bluetooth, WiFi, Location }
 
 sealed interface Availability {
     data object Available : Availability

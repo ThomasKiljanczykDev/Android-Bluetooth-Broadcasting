@@ -31,6 +31,11 @@ android {
             dimension = "transport"
             applicationIdSuffix = ".nearby"
         }
+        create("ble") {
+            dimension = "transport"
+            applicationIdSuffix = ".ble"
+            minSdk = 26
+        }
     }
 
     buildTypes {
@@ -60,6 +65,7 @@ dependencies {
     implementation(project(":transport:core"))
     "bluetoothImplementation"(project(":transport:bluetooth"))
     "nearbyImplementation"(project(":transport:nearby"))
+    "bleImplementation"(project(":transport:ble"))
 
     // AndroidX
     implementation(libs.androidx.coreKtx)

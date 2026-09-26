@@ -4,15 +4,19 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
+import androidx.core.location.LocationManagerCompat
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.Radio
 
 /** [Radio.WiFi] relies on ACCESS_WIFI_STATE, declared by transports that require it. */
 internal fun Radio.isEnabled(context: Context): Boolean = when (this) {
     Radio.Bluetooth -> context.getSystemService(BluetoothManager::class.java)?.adapter?.isEnabled == true
     Radio.WiFi -> context.getSystemService(WifiManager::class.java)?.isWifiEnabled == true
+    Radio.Location -> context.getSystemService(LocationManager::class.java)
+        ?.let(LocationManagerCompat::isLocationEnabled) == true
 }
 
 /** [Radio.Bluetooth] requires BLUETOOTH_CONNECT on API 31+. */
@@ -23,4 +27,5 @@ internal fun Radio.enableIntent(): Intent = when (this) {
     } else {
         Intent(Settings.ACTION_WIFI_SETTINGS)
     }
+    Radio.Location -> Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
 }

@@ -1,0 +1,6 @@
+<resources>
+    <string name="transport_ble_unavailable">This device has no Bluetooth.</string>
+    <string name="transport_ble_extended_unsupported">This device does not support Bluetooth LE extended advertising.</string>
+    <string name="transport_ble_discovery_hint">Scanning for servers… Start the server on the other device.</string>
+    <string name="transport_ble_server_hint">Clients receive advertised messages without connecting. Client connections are not reported.</string>
+</resources>

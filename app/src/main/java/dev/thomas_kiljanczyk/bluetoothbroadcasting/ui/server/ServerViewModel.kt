@@ -1,5 +1,6 @@
 package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.server
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,9 +19,19 @@ import javax.inject.Inject
 interface ServerUiState {
     val isServerOn: Boolean
     val isStartingServer: Boolean
+    val maxMessageBytes: Int?
+
+    @get:StringRes
+    val hint: Int?
 }
 
-internal class MutableServerUiState : ServerUiState {
+fun ServerUiState.fits(message: String): Boolean =
+    maxMessageBytes?.let { message.encodeToByteArray().size <= it } ?: true
+
+internal class MutableServerUiState(
+    override val maxMessageBytes: Int? = null,
+    override val hint: Int? = null
+) : ServerUiState {
     override var isServerOn by mutableStateOf(false)
     override var isStartingServer by mutableStateOf(false)
 }
@@ -29,7 +40,7 @@ internal class MutableServerUiState : ServerUiState {
 class ServerViewModel @Inject constructor(
     private val server: BroadcastServer
 ) : ViewModel() {
-    private val _state = MutableServerUiState()
+    private val _state = MutableServerUiState(server.maxMessageBytes, server.hint)
     val state: ServerUiState get() = _state
 
     val messageFlow: Flow<ServerUiMessage> = server.events.map { it.toUiMessage() }
@@ -45,7 +56,9 @@ class ServerViewModel @Inject constructor(
 
     fun stopServer() = server.stop()
 
-    fun broadcastMessage(message: String) = server.broadcast(message)
+    fun broadcastMessage(message: String) {
+        if (state.fits(message)) server.broadcast(message)
+    }
 }
 
 private fun ServerEvent.toUiMessage(): ServerUiMessage {
