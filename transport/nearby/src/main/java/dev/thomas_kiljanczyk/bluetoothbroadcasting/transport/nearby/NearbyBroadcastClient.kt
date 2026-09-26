@@ -44,6 +44,8 @@ class NearbyBroadcastClient @Inject constructor(
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {}
     }
 
+    private var endpointId: String? = null
+
     init {
         scope.onCancellation(::disconnect)
     }
@@ -73,6 +75,7 @@ class NearbyBroadcastClient @Inject constructor(
             }
         }
 
+        endpointId = device.id
         connectionsClient.requestConnection(localEndpointName.value, device.id, callback)
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to request connection", e)
@@ -80,8 +83,10 @@ class NearbyBroadcastClient @Inject constructor(
             }
     }
 
+    /** Endpoint only: stopAllEndpoints() resets the shared client, dropping discovered endpoints (8009). */
     override fun disconnect() {
-        connectionsClient.stopAllEndpoints()
+        endpointId?.let(connectionsClient::disconnectFromEndpoint)
+        endpointId = null
         _state.value = ClientState.Disconnected
     }
 }
