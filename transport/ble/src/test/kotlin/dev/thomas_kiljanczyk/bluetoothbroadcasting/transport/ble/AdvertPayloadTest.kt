@@ -56,12 +56,11 @@ class AdvertPayloadTest {
     }
 
     @Test
-    fun `session key round-trips`() {
-        listOf(0, 1, -1, Int.MIN_VALUE, Int.MAX_VALUE).forEach {
-            assertEquals(8, sessionKey(it).length)
-            assertEquals(it, parseSessionKey(sessionKey(it)))
-        }
-        assertNull(parseSessionKey("AA:BB:CC:DD:EE:FF"))
+    fun `session key is 8 hex digits`() {
+        assertEquals("00000000", sessionKey(0))
+        assertEquals("0000002a", sessionKey(42))
+        assertEquals("ffffffff", sessionKey(-1))
+        assertEquals("80000000", sessionKey(Int.MIN_VALUE))
     }
 
     @Test

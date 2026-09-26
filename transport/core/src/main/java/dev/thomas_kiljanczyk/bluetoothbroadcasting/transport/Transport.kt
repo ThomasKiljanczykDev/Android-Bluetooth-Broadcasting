@@ -12,6 +12,8 @@ object TransportConstants {
 /** [id] is transport-specific: Nearby endpoint id or Bluetooth MAC address. */
 data class RemoteDevice(val id: String, val name: String?)
 
+data class ReceivedMessage(val sender: RemoteDevice, val text: String)
+
 enum class ServerState { Stopped, Starting, Running }
 
 sealed interface ServerEvent {
@@ -26,6 +28,9 @@ sealed interface ClientState {
     data object Connecting : ClientState
     data class Connected(val device: RemoteDevice) : ClientState
     data class ConnectionFailed(val device: RemoteDevice) : ClientState
+
+    /** Receiving from any server in range; [servers] heard recently. */
+    data class Listening(val servers: List<RemoteDevice>) : ClientState
 }
 
 interface BroadcastServer {
@@ -46,9 +51,13 @@ interface BroadcastServer {
 
 interface BroadcastClient {
     val state: StateFlow<ClientState>
-    val messages: Flow<String>
+    val messages: Flow<ReceivedMessage>
+
+    /** false: [listen] replaces [connect]; no server pick. */
+    val requiresServerPick: Boolean get() = true
 
     fun connect(device: RemoteDevice)
+    fun listen(): Unit = throw UnsupportedOperationException("Server pick required")
     fun disconnect()
 }
 

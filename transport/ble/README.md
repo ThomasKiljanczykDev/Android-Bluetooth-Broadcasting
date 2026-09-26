@@ -7,8 +7,8 @@ Connectionless BLE transport. Server advertises the current message; clients sca
 | Class                      | Role                                                        |
 |----------------------------|-------------------------------------------------------------|
 | `BleBroadcastServer`       | Extended advertising set; message → advertising data        |
-| `BleBroadcastClient`       | Scans for one session; liveness via `trackSession`          |
-| `BleServerDiscovery`       | Scans for all sessions; grouped via `toServerList`          |
+| `BleBroadcastClient`       | `listen()`: scans all sessions via `listen`                  |
+| `BleServerDiscovery`       | Scans all sessions via `toServerList`; unused by UI         |
 | `BleScanner`               | Scan → decoded `AdvertPayload` flow                          |
 | `BleTransportRequirements` | Permissions, radios, extended advertising support           |
 | `AdvertPayload`            | Payload encode/decode                                       |
@@ -34,10 +34,11 @@ Connectionless BLE transport. Server advertises the current message; clients sca
 
 ## Client
 
-* `RemoteDevice.id`: `sessionId` as 8 hex digits; MAC not used
-* `connect()` → `Connecting` → first matching advert → `Connected` (advertised name)
-* New `seq` → message emitted; repeated `seq` ignored; current message delivered on connect
-* 10 s without matching advert: `Disconnected` if heard, else `ConnectionFailed`
+* `requiresServerPick = false`; `listen()` starts scan, `connect()` delegates to it
+* State: `Listening(servers)`; `Disconnected` after `disconnect()` or when scan cannot start
+* Messages from every session; sender `RemoteDevice.id` = `sessionId` as 8 hex digits, name from payload; MAC not used
+* New `seq` per session → message emitted; repeated `seq` ignored; current message delivered on first reception
+* Server dropped from `servers` after 10 s without advert
 
 ## Discovery
 

@@ -14,6 +14,14 @@
     <string name="activity_client_connected">Connected (%s)</string>
     <string name="activity_client_no_content">No content yet</string>
     <string name="activity_client_disconnect">Disconnect</string>
+    <string name="activity_client_listen">Listen</string>
+    <string name="activity_client_stop_listening">Stop listening</string>
+    <string name="activity_client_not_listening">Not listening</string>
+    <string name="activity_client_listening">Listening…</string>
+    <plurals name="activity_client_listening_servers">
+        <item quantity="one">Listening (%d server)</item>
+        <item quantity="other">Listening (%d servers)</item>
+    </plurals>
 
     <string name="activity_server_start_server">Start server</string>
     <string name="activity_server_server_off">Server OFF</string>

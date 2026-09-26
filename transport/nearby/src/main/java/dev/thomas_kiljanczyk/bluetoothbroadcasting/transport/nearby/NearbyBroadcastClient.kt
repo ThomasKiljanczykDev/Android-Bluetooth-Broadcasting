@@ -10,6 +10,7 @@ import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastClient
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ClientState
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ReceivedMessage
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.TransportScope
 import kotlinx.coroutines.CoroutineScope
@@ -31,12 +32,14 @@ class NearbyBroadcastClient @Inject constructor(
     private val _state = MutableStateFlow<ClientState>(ClientState.Disconnected)
     override val state: StateFlow<ClientState> = _state
 
-    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 16)
-    override val messages: Flow<String> = _messages
+    private val _messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 16)
+    override val messages: Flow<ReceivedMessage> = _messages
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            payload.asBytes()?.let { _messages.tryEmit(it.decodeToString()) }
+            val bytes = payload.asBytes() ?: return
+            val sender = (_state.value as? ClientState.Connected)?.device ?: RemoteDevice(endpointId, null)
+            _messages.tryEmit(ReceivedMessage(sender, bytes.decodeToString()))
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {}

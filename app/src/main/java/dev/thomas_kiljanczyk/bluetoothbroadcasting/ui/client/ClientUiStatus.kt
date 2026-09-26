@@ -6,4 +6,5 @@ sealed class ClientUiStatus {
     object ConnectionFailed : ClientUiStatus()
     object ConnectedUnknown : ClientUiStatus()
     data class Connected(val deviceName: String) : ClientUiStatus()
+    data class Listening(val serverCount: Int) : ClientUiStatus()
 }

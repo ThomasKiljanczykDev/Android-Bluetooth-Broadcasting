@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,7 @@ fun ClientScreen(
         state = viewModel.state,
         onNavigateUp = onNavigateUp,
         onDevicePicked = viewModel::startClient,
+        onListen = viewModel::listen,
         onDisconnect = viewModel::stopClient
     )
 }
@@ -55,12 +58,17 @@ fun ClientScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onNavigateUp: () -> Unit,
     onDevicePicked: (RemoteDevice) -> Unit,
+    onListen: () -> Unit,
     onDisconnect: () -> Unit
 ) {
     var showPickDeviceDialog by remember { mutableStateOf(false) }
 
     val statusText = when (val status = state.status) {
-        is ClientUiStatus.Disconnected -> stringResource(R.string.activity_client_disconnected)
+        is ClientUiStatus.Disconnected -> if (state.requiresServerPick) {
+            stringResource(R.string.activity_client_disconnected)
+        } else {
+            stringResource(R.string.activity_client_not_listening)
+        }
         is ClientUiStatus.Connecting -> stringResource(R.string.activity_client_connecting)
         is ClientUiStatus.ConnectionFailed -> stringResource(R.string.activity_client_connection_failed)
         is ClientUiStatus.ConnectedUnknown -> stringResource(R.string.activity_client_connected_unknown)
@@ -68,6 +76,15 @@ fun ClientScreen(
             R.string.activity_client_connected,
             status.deviceName
         )
+        is ClientUiStatus.Listening -> if (status.serverCount == 0) {
+            stringResource(R.string.activity_client_listening)
+        } else {
+            pluralStringResource(
+                R.plurals.activity_client_listening_servers,
+                status.serverCount,
+                status.serverCount
+            )
+        }
     }
 
     if (showPickDeviceDialog) {
@@ -104,10 +121,19 @@ fun ClientScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = state.receivedText.ifBlank { stringResource(R.string.activity_client_no_content) },
-                modifier = Modifier.weight(1f)
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                state.sender?.let {
+                    Text(
+                        text = it.name ?: stringResource(R.string.placeholder_server_device),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+                Text(state.receivedText.ifBlank { stringResource(R.string.activity_client_no_content) })
+            }
 
             Text(text = statusText)
 
@@ -117,12 +143,28 @@ fun ClientScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
             ) {
-                Button(onClick = { showPickDeviceDialog = true }) {
-                    Text(stringResource(R.string.activity_client_connect_to_server))
-                }
+                if (state.requiresServerPick) {
+                    Button(onClick = { showPickDeviceDialog = true }) {
+                        Text(stringResource(R.string.activity_client_connect_to_server))
+                    }
 
-                OutlinedButton(onClick = onDisconnect) {
-                    Text(stringResource(R.string.activity_client_disconnect))
+                    OutlinedButton(onClick = onDisconnect) {
+                        Text(stringResource(R.string.activity_client_disconnect))
+                    }
+                } else {
+                    Button(
+                        enabled = state.status !is ClientUiStatus.Listening,
+                        onClick = onListen
+                    ) {
+                        Text(stringResource(R.string.activity_client_listen))
+                    }
+
+                    OutlinedButton(
+                        enabled = state.status is ClientUiStatus.Listening,
+                        onClick = onDisconnect
+                    ) {
+                        Text(stringResource(R.string.activity_client_stop_listening))
+                    }
                 }
             }
         }
@@ -137,6 +179,7 @@ private fun ClientScreenDisconnectedPreview() {
             state = MutableClientUiState(),
             onNavigateUp = {},
             onDevicePicked = {},
+            onListen = {},
             onDisconnect = {}
         )
     }
@@ -153,6 +196,25 @@ private fun ClientScreenConnectedPreview() {
             },
             onNavigateUp = {},
             onDevicePicked = {},
+            onListen = {},
+            onDisconnect = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ClientScreenListeningPreview() {
+    BluetoothBroadcastingTheme {
+        ClientScreen(
+            state = MutableClientUiState(requiresServerPick = false).apply {
+                status = ClientUiStatus.Listening(2)
+                receivedText = "Hello from server!"
+                sender = RemoteDevice("0000002a", "My Server")
+            },
+            onNavigateUp = {},
+            onDevicePicked = {},
+            onListen = {},
             onDisconnect = {}
         )
     }

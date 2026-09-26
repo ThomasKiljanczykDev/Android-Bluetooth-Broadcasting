@@ -31,15 +31,22 @@ class FakeBroadcastServer(
     }
 }
 
-class FakeBroadcastClient : BroadcastClient {
+class FakeBroadcastClient(
+    override val requiresServerPick: Boolean = true
+) : BroadcastClient {
     override val state = MutableStateFlow<ClientState>(ClientState.Disconnected)
-    override val messages = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    override val messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 16)
 
     val connectRequests = mutableListOf<RemoteDevice>()
+    var listenCount = 0
     var disconnectCount = 0
 
     override fun connect(device: RemoteDevice) {
         connectRequests += device
+    }
+
+    override fun listen() {
+        listenCount++
     }
 
     override fun disconnect() {

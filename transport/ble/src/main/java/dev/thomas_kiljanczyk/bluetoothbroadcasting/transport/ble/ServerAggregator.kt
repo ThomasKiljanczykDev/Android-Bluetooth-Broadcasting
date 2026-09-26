@@ -19,7 +19,7 @@ internal fun Flow<AdvertPayload>.toServerList(timeoutMs: Long): Flow<List<Remote
     collect { advert ->
         val id = advert.sessionId
         mutex.withLock {
-            servers[id] = RemoteDevice(sessionKey(id), advert.name.ifEmpty { null })
+            servers[id] = advert.toRemoteDevice()
             expiries.remove(id)?.cancel()
             expiries[id] = launch {
                 delay(timeoutMs)

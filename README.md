@@ -19,7 +19,7 @@ Android app broadcasting text messages from one server to many clients.
 | Play Services    | Not required                                 | Required                                  | Not required                                 |
 | Pairing          | Required (system Bluetooth settings)         | Not required                              | Not required                                 |
 | Radios           | Bluetooth                                    | Bluetooth + Wi-Fi                         | Bluetooth; + Location on API ≤ 30            |
-| Discovery        | Bonded devices, SDP service UUID lookup      | Nearby advertising/discovery (P2P_STAR)   | BLE scan for service data                    |
+| Discovery        | Bonded devices, SDP service UUID lookup      | Nearby advertising/discovery (P2P_STAR)   | None; client listens to all servers         |
 | Link             | RFCOMM socket                                | Nearby-managed (Bluetooth, BLE, Wi-Fi)    | None; message carried in advert              |
 | Clients          | ~4–7 (piconet limit)                         | Many                                      | Unlimited; not reported to server            |
 | Message size     | Unlimited                                    | Unlimited                                 | 150–174 bytes UTF-8                          |
@@ -50,7 +50,7 @@ Android app broadcasting text messages from one server to many clients.
 
 * `:transport:core` — interfaces, `RemoteDevice`, state/event types, `TransportRequirements`, fakes (`testFixtures`)
   * `BroadcastServer` — `start()`, `stop()`, `broadcast(String)`, `state`, `events`, `maxMessageBytes`, `hint`
-  * `BroadcastClient` — `connect(RemoteDevice)`, `disconnect()`, `state`, `messages`
+  * `BroadcastClient` — `connect(RemoteDevice)` or `listen()` (per `requiresServerPick`), `disconnect()`, `state`, `messages` (`ReceivedMessage`: sender + text)
   * `ServerDiscovery` — `discover()`: cold `Flow`, discovery runs while collected
   * `TransportRequirements` — runtime permissions, required radios, availability check
 * Transport modules: implementations, Hilt bindings, manifest permissions (merged into the app)
@@ -63,14 +63,14 @@ Android app broadcasting text messages from one server to many clients.
 
 1. **Server** → **Start server**
 2. Type message → **Send message**: broadcast to all connected clients; ble: to all listening clients, **Send** disabled over byte limit
-3. **Stop server**: disconnects all clients; ble: clients disconnect after 10 s
+3. **Stop server**: disconnects all clients; ble: server leaves clients' list after 10 s
 
 ### Client
 
 1. bluetooth only: pair client and server devices in system Bluetooth settings
-2. **Client** → **Connect to server** → pick server
-3. Received messages are displayed; ble: current message shown on connect
-4. **Disconnect** ends the session; ble: also ends after 10 s without adverts
+2. **Client** → **Connect to server** → pick server; ble: **Client** → **Listen**, no pick
+3. Received messages are displayed; ble: from any server in range, with sender name; current message shown when first heard
+4. **Disconnect** ends the session; ble: **Stop listening**
 
 ## Permissions
 

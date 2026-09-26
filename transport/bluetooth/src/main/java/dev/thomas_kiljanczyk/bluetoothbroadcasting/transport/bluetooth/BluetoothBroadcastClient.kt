@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastClient
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ClientState
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ReceivedMessage
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.TransportScope
 import kotlinx.coroutines.CoroutineScope
@@ -34,8 +35,8 @@ class BluetoothBroadcastClient @Inject constructor(
     private val _state = MutableStateFlow<ClientState>(ClientState.Disconnected)
     override val state: StateFlow<ClientState> = _state
 
-    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 16)
-    override val messages: Flow<String> = _messages
+    private val _messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 16)
+    override val messages: Flow<ReceivedMessage> = _messages
 
     private var connectionJob: Job? = null
 
@@ -56,7 +57,7 @@ class BluetoothBroadcastClient @Inject constructor(
                         coroutineScope {
                             val heartbeat = launch { sendHeartbeats(socket) }
                             try {
-                                receive(socket)
+                                receive(socket, device)
                             } finally {
                                 heartbeat.cancel()
                             }
@@ -85,13 +86,13 @@ class BluetoothBroadcastClient @Inject constructor(
         _state.value = ClientState.Disconnected
     }
 
-    private suspend fun receive(socket: BluetoothSocket) {
+    private suspend fun receive(socket: BluetoothSocket, device: RemoteDevice) {
         val framer = MessageFramer()
         val buffer = ByteArray(1024)
         while (true) {
             val read = socket.inputStream.read(buffer)
             if (read == -1) return
-            framer.decode(buffer, read).forEach { _messages.emit(it) }
+            framer.decode(buffer, read).forEach { _messages.emit(ReceivedMessage(device, it)) }
         }
     }
 
