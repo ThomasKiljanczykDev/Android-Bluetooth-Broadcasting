@@ -7,6 +7,7 @@ import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback
 import com.google.android.gms.nearby.connection.ConnectionResolution
 import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
+import dagger.hilt.android.scopes.ViewModelScoped
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastServer
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ServerEvent
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
+@ViewModelScoped
 class NearbyBroadcastServer @Inject constructor(
     private val connectionsClient: ConnectionsClient,
     private val localEndpointName: LocalEndpointName,

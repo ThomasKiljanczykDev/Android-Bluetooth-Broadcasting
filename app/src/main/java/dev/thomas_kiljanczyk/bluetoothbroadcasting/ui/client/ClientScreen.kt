@@ -31,31 +31,44 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pickserver.PickDeviceDialog
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pickserver.PickDeviceDialogViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastingTheme
 
 @Composable
 fun ClientScreen(
-    onNavigateUp: () -> Unit,
-    viewModel: ClientViewModel
+    title: String,
+    viewModel: ClientViewModel,
+    pickDeviceViewModel: @Composable () -> PickDeviceDialogViewModel,
+    onNavigateUp: () -> Unit
 ) {
     ClientScreen(
+        title = title,
         state = viewModel.state,
         onNavigateUp = onNavigateUp,
-        onDevicePicked = viewModel::startClient,
-        onDisconnect = viewModel::stopClient
+        onDisconnect = viewModel::stopClient,
+        pickDeviceDialog = { onDismiss ->
+            PickDeviceDialog(
+                viewModel = pickDeviceViewModel(),
+                onDevicePicked = { device ->
+                    viewModel.startClient(device)
+                    onDismiss()
+                },
+                onDismiss = onDismiss
+            )
+        }
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientScreen(
+    title: String,
     state: ClientUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onNavigateUp: () -> Unit,
-    onDevicePicked: (RemoteDevice) -> Unit,
-    onDisconnect: () -> Unit
+    onDisconnect: () -> Unit,
+    pickDeviceDialog: @Composable (onDismiss: () -> Unit) -> Unit
 ) {
     var showPickDeviceDialog by remember { mutableStateOf(false) }
 
@@ -71,19 +84,13 @@ fun ClientScreen(
     }
 
     if (showPickDeviceDialog) {
-        PickDeviceDialog(
-            onDevicePicked = { device ->
-                onDevicePicked(device)
-                showPickDeviceDialog = false
-            },
-            onDismiss = { showPickDeviceDialog = false }
-        )
+        pickDeviceDialog { showPickDeviceDialog = false }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.label_client_activity)) },
+                title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
@@ -134,10 +141,11 @@ fun ClientScreen(
 private fun ClientScreenDisconnectedPreview() {
     BluetoothBroadcastingTheme {
         ClientScreen(
+            title = "Bluetooth client",
             state = MutableClientUiState(),
             onNavigateUp = {},
-            onDevicePicked = {},
-            onDisconnect = {}
+            onDisconnect = {},
+            pickDeviceDialog = {}
         )
     }
 }
@@ -151,9 +159,10 @@ private fun ClientScreenConnectedPreview() {
                 status = ClientUiStatus.Connected("My Server")
                 receivedText = "Hello from server!"
             },
+            title = "Bluetooth client",
             onNavigateUp = {},
-            onDevicePicked = {},
-            onDisconnect = {}
+            onDisconnect = {},
+            pickDeviceDialog = {}
         )
     }
 }

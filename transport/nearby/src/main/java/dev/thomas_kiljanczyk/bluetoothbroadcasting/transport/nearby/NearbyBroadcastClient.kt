@@ -8,6 +8,7 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import dagger.hilt.android.scopes.ViewModelScoped
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastClient
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ClientState
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+@ViewModelScoped
 class NearbyBroadcastClient @Inject constructor(
     private val connectionsClient: ConnectionsClient,
     private val localEndpointName: LocalEndpointName,
@@ -41,6 +43,8 @@ class NearbyBroadcastClient @Inject constructor(
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {}
     }
+
+    private var endpointId: String? = null
 
     init {
         scope.onCancellation(::disconnect)
@@ -71,6 +75,7 @@ class NearbyBroadcastClient @Inject constructor(
             }
         }
 
+        endpointId = device.id
         connectionsClient.requestConnection(localEndpointName.value, device.id, callback)
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to request connection", e)
@@ -78,8 +83,10 @@ class NearbyBroadcastClient @Inject constructor(
             }
     }
 
+    /** Endpoint only: stopAllEndpoints() resets the shared client, dropping discovered endpoints (8009). */
     override fun disconnect() {
-        connectionsClient.stopAllEndpoints()
+        endpointId?.let(connectionsClient::disconnectFromEndpoint)
+        endpointId = null
         _state.value = ClientState.Disconnected
     }
 }

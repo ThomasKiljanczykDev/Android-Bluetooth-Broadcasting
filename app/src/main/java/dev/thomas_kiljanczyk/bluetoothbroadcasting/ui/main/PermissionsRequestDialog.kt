@@ -12,10 +12,10 @@ import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastin
 @Composable
 fun PermissionsRequestDialog(
     onProceed: () -> Unit,
-    onExit: () -> Unit
+    onCancel: () -> Unit
 ) {
     AppAlertDialog(
-        onDismissRequest = {},
+        onDismissRequest = onCancel,
         text = { Text(stringResource(R.string.dialog_fragment_permissions_request_message)) },
         confirmButton = {
             TextButton(onClick = onProceed) {
@@ -23,8 +23,8 @@ fun PermissionsRequestDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onExit) {
-                Text(stringResource(R.string.dialog_fragment_permission_close_app))
+            TextButton(onClick = onCancel) {
+                Text(stringResource(R.string.dialog_fragment_permission_cancel))
             }
         }
     )
@@ -36,7 +36,7 @@ private fun PermissionsRequestDialogPreview() {
     BluetoothBroadcastingTheme {
         PermissionsRequestDialog(
             onProceed = {},
-            onExit = {}
+            onCancel = {}
         )
     }
 }

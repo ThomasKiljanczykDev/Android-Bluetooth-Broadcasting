@@ -4,9 +4,3 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 object MainRoute
-
-@Serializable
-object ClientRoute
-
-@Serializable
-object ServerRoute

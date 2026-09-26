@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ble: <= 30, nearby: <= 31; widest range kept. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="31"
+        tools:replace="android:maxSdkVersion" />
 
     <application
         android:name="dev.thomas_kiljanczyk.bluetoothbroadcasting.application.BluetoothApplication"

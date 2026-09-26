@@ -63,8 +63,6 @@ internal data class AdvertPayload(
 
 internal fun sessionKey(sessionId: Int): String = sessionId.toUInt().toString(16).padStart(8, '0')
 
-internal fun parseSessionKey(key: String): Int? = key.toUIntOrNull(16)?.toInt()
-
 /** Longest prefix encoding to at most [maxBytes] UTF-8 bytes, cut at a code point boundary. */
 internal fun String.truncateUtf8(maxBytes: Int): String {
     var bytes = 0

@@ -8,7 +8,7 @@ android {
     namespace = "dev.thomas_kiljanczyk.bluetoothbroadcasting.transport"
 
     defaultConfig {
-        minSdk = 25
+        minSdk = 26
         compileSdk = 37
     }
 

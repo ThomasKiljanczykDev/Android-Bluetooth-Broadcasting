@@ -32,13 +32,6 @@ interface BroadcastServer {
     val state: StateFlow<ServerState>
     val events: Flow<ServerEvent>
 
-    /** UTF-8 byte limit for [broadcast]; null if unlimited. Longer messages are dropped. */
-    val maxMessageBytes: Int? get() = null
-
-    /** Server screen note; null if none. */
-    @get:StringRes
-    val hint: Int? get() = null
-
     fun start()
     fun stop()
     fun broadcast(message: String)
