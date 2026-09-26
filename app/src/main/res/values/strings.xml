@@ -22,6 +22,7 @@
     <string name="activity_server_send_message">Send message</string>
     <string name="activity_server_stop_server">Stop server</string>
     <string name="activity_server_message_sent">Message has been sent</string>
+    <string name="activity_server_message_bytes">%1$d/%2$d bytes</string>
     <string name="activity_server_message_not_sent">You must start server first</string>
     <string name="activity_server_connected">%s has connected</string>
     <string name="activity_server_connected_unknown">Unknown device has connected</string>

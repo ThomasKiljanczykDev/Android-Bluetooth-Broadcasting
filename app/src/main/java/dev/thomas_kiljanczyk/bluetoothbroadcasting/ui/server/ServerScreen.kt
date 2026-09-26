@@ -12,6 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
@@ -80,6 +82,7 @@ fun ServerScreen(
 ) {
     val scope = rememberCoroutineScope()
     var messageText by remember { mutableStateOf("") }
+    val fits = state.fits(messageText)
 
     val messageSentText = stringResource(R.string.activity_server_message_sent)
     val messageNotSentText = stringResource(R.string.activity_server_message_not_sent)
@@ -115,6 +118,14 @@ fun ServerScreen(
                     stringResource(R.string.activity_server_server_off)
             )
 
+            state.hint?.let {
+                Text(
+                    text = stringResource(it),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
@@ -139,10 +150,23 @@ fun ServerScreen(
                 onValueChange = { messageText = it },
                 label = { Text(stringResource(R.string.activity_server_enter_message)) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = !fits,
+                supportingText = state.maxMessageBytes?.let { max ->
+                    {
+                        Text(
+                            stringResource(
+                                R.string.activity_server_message_bytes,
+                                messageText.encodeToByteArray().size,
+                                max
+                            )
+                        )
+                    }
+                }
             )
 
             Button(
+                enabled = fits,
                 onClick = {
                     onBroadcastMessage(messageText)
                     val text = if (state.isServerOn) messageSentText else messageNotSentText
@@ -176,6 +200,20 @@ private fun ServerScreenStartingPreview() {
     BluetoothBroadcastingTheme {
         ServerScreen(
             state = MutableServerUiState().apply { isStartingServer = true },
+            onNavigateUp = {},
+            onStartServer = {},
+            onStopServer = {},
+            onBroadcastMessage = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ServerScreenLimitedPreview() {
+    BluetoothBroadcastingTheme {
+        ServerScreen(
+            state = MutableServerUiState(maxMessageBytes = 150).apply { isServerOn = true },
             onNavigateUp = {},
             onStartServer = {},
             onStopServer = {},
