@@ -26,9 +26,8 @@ import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.Radio
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.TransportRequirements
 
 /**
- * Runs actions only once [requirements] permissions are granted and radios enabled.
- * Each disabled radio is prompted once per action; a declined prompt drops the action.
- * `unavailableReason`: string resource, null if available.
+ * Runs actions once [requirements] permissions are granted and radios enabled; each disabled radio
+ * is prompted once per action, a decline drops the action. `unavailableReason`: string resource or null.
  */
 @Composable
 fun TransportGate(

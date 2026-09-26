@@ -5,7 +5,7 @@
 
     <!-- Uncapped: WifiManager.isWifiEnabled() needs it for the Radio.WiFi check. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- Uncapped: Play Services fails startAdvertising with 8033 on API 36+ without it. -->
+    <!-- Uncapped: startAdvertising fails with 8033 on API 36+ without it. -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission
         android:name="android.permission.BLUETOOTH"
