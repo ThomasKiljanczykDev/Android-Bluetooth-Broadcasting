@@ -7,8 +7,7 @@ Connectionless BLE transport. Server advertises the current message; clients sca
 | Class                      | Role                                                        |
 |----------------------------|-------------------------------------------------------------|
 | `BleBroadcastServer`       | Extended advertising set; message → advertising data        |
-| `BleBroadcastClient`       | `listen()`: scans all sessions via `listen`                  |
-| `BleServerDiscovery`       | Scans all sessions via `toServerList`; unused by UI         |
+| `BleListener`              | Scans all sessions; `servers` via `toHeardServers`           |
 | `BleScanner`               | Scan → decoded `AdvertPayload` flow                          |
 | `BleTransportRequirements` | Permissions, radios, extended advertising support           |
 | `AdvertPayload`            | Payload encode/decode                                       |
@@ -30,20 +29,17 @@ Connectionless BLE transport. Server advertises the current message; clients sca
 
 * Advertising data budget: 200 bytes → message ≤ 174 − name bytes (150–174)
 * `broadcast()`: `setAdvertisingData` with next `seq`; set not restarted, session and address unchanged
-* Over-limit `broadcast()` dropped; `maxMessageBytes` exposed for UI
+* Over-limit `broadcast()` dropped; `maxMessageBytes` public on `BleBroadcastServer`
 
-## Client
+## Listener
 
-* `requiresServerPick = false`; `listen()` starts scan, `connect()` delegates to it
-* State: `Listening(servers)`; `Disconnected` after `disconnect()` or when scan cannot start
-* Messages from every session; sender `RemoteDevice.id` = `sessionId` as 8 hex digits, name from payload; MAC not used
-* New `seq` per session → message emitted; repeated `seq` ignored; current message delivered on first reception
-* Server dropped from `servers` after 10 s without advert
-
-## Discovery
-
-* One entry per `sessionId`; name from payload
-* Entry dropped after 10 s without advert
+* Not a `BroadcastClient`: `start()`, `stop()`, `state` (`Stopped` / `Listening`), `servers`
+* `servers`: one `HeardServer` per `sessionId`, first-heard order
+  * `device.id`: `sessionId` as 8 hex digits; MAC not used
+  * `device.name`: from payload; null if empty
+  * `message`: current message; null while `seq` = 0
+* Server dropped after 10 s without advert
+* Scan cannot start (Bluetooth off): `Stopped`
 
 ## Quirks
 
@@ -54,10 +50,10 @@ Connectionless BLE transport. Server advertises the current message; clients sca
 | Data > 1 PDU is chained (`AUX_CHAIN_IND`); receivers may report `DATA_TRUNCATED`         | 200-byte budget; non-`DATA_COMPLETE` results ignored            | [ScanResult](https://developer.android.com/reference/android/bluetooth/le/ScanResult#getDataStatus()) |
 | Periodic advertising sync is not public API                                             | Not used                                                        | — |
 | `isLeExtendedAdvertisingSupported()` is false while Bluetooth is off                    | Treated as available; unsupported hardware fails `start()`      | [BluetoothAdapter](https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#isLeExtendedAdvertisingSupported()) |
-| > 5 scan starts per 30 s per app: scan silently returns nothing                          | Not handled; discovery and client each start one scan           | AOSP `AppScanStats` |
+| > 5 scan starts per 30 s per app: scan silently returns nothing                          | Not handled; one scan per **Listen**                              | AOSP `AppScanStats` |
 | API ≤ 30: scan results need location permission and location services on               | `ACCESS_FINE_LOCATION`; `Radio.Location` required                | [Bluetooth permissions](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions) |
 | `neverForLocation` filters beacon-format adverts                                        | Custom service data unaffected                                  | [Bluetooth permissions](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions) |
-| Listeners are invisible to the advertiser                                               | `events` never emits; `hint` shown on server screen             | — |
+| Listeners are invisible to the advertiser                                               | `events` never emits; hint shown on server screen               | — |
 
 ## Permissions
 
