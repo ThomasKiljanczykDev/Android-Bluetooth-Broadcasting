@@ -1,12 +1,5 @@
 package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.server
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
-import android.content.Intent
-import android.provider.Settings
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +19,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,12 +27,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.application.NearbyPermissions
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastingTheme
 import kotlinx.coroutines.launch
 
@@ -49,43 +39,16 @@ fun ServerScreen(
     onNavigateUp: () -> Unit,
     viewModel: ServerViewModel
 ) {
-    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    val noBluetoothText = stringResource(R.string.toast_no_bluetooth)
     val connectedUnknownText = stringResource(R.string.activity_server_connected_unknown)
     val connectedText = stringResource(R.string.activity_server_connected)
     val disconnectedUnknownText = stringResource(R.string.activity_server_disconnected_unknown)
     val disconnectedText = stringResource(R.string.activity_server_disconnected)
 
-    val enableBluetoothLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_CANCELED) {
-            Log.d("ServerScreen", "User refused REQUEST_ENABLE_BT")
-        }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { }
-
-    DisposableEffect(Unit) {
-        val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
-        val bluetoothAdapter = bluetoothManager?.adapter
-        if (bluetoothAdapter == null) {
-            scope.launch { snackbarHostState.showSnackbar(noBluetoothText) }
-        } else if (!bluetoothAdapter.isEnabled) {
-            enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-        }
-        onDispose { viewModel.stopServer() }
-    }
-
     LaunchedEffect(Unit) {
         viewModel.messageFlow.collect { message ->
             val text = when (message) {
-                is ServerUiMessage.None -> return@collect
                 is ServerUiMessage.ConnectedUnknown -> connectedUnknownText
                 is ServerUiMessage.Connected -> connectedText.format(message.deviceName)
                 is ServerUiMessage.DisconnectedUnknown -> disconnectedUnknownText
@@ -99,14 +62,7 @@ fun ServerScreen(
         state = viewModel.state,
         snackbarHostState = snackbarHostState,
         onNavigateUp = onNavigateUp,
-        onStartServer = { deviceName ->
-            try {
-                viewModel.startServer(deviceName)
-            } catch (ex: SecurityException) {
-                Log.e("ServerScreen", "Failed to start server", ex)
-                permissionLauncher.launch(NearbyPermissions.REQUIRED_PERMISSIONS)
-            }
-        },
+        onStartServer = viewModel::startServer,
         onStopServer = viewModel::stopServer,
         onBroadcastMessage = viewModel::broadcastMessage
     )
@@ -118,11 +74,10 @@ fun ServerScreen(
     state: ServerUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onNavigateUp: () -> Unit,
-    onStartServer: (deviceName: String) -> Unit,
+    onStartServer: () -> Unit,
     onStopServer: () -> Unit,
     onBroadcastMessage: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var messageText by remember { mutableStateOf("") }
 
@@ -166,12 +121,7 @@ fun ServerScreen(
             ) {
                 Button(
                     enabled = !state.isServerOn && !state.isStartingServer,
-                    onClick = {
-                        val deviceName = Settings.Global.getString(
-                            context.contentResolver, Settings.Global.DEVICE_NAME
-                        )
-                        onStartServer(deviceName)
-                    }
+                    onClick = onStartServer
                 ) {
                     Text(stringResource(R.string.activity_server_start_server))
                 }

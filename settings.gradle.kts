@@ -26,3 +26,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "BluetoothBroadcasting"
 include(":app")
+include(":transport:core")
+include(":transport:nearby")
+include(":transport:bluetooth")

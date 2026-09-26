@@ -1,0 +1,4 @@
+<resources>
+    <string name="transport_nearby_unavailable">This app requires Google Play Services. Install Google Play Services and try again.</string>
+    <string name="transport_nearby_discovery_hint">Searching for servers nearby…</string>
+</resources>

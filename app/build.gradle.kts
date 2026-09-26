@@ -20,6 +20,19 @@ android {
         versionName = "$major.$minor.$patch"
     }
 
+    flavorDimensions += "transport"
+    productFlavors {
+        create("bluetooth") {
+            dimension = "transport"
+            applicationIdSuffix = ".bluetooth"
+            isDefault = true
+        }
+        create("nearby") {
+            dimension = "transport"
+            applicationIdSuffix = ".nearby"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -44,7 +57,9 @@ android {
 dependencies {
     // App dependencies
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.play.services.nearby)
+    implementation(project(":transport:core"))
+    "bluetoothImplementation"(project(":transport:bluetooth"))
+    "nearbyImplementation"(project(":transport:nearby"))
 
     // AndroidX
     implementation(libs.androidx.coreKtx)
@@ -67,6 +82,10 @@ dependencies {
     // Hilt
     implementation(libs.hilt)
     ksp(libs.hiltCompiler)
+
+    testImplementation(testFixtures(project(":transport:core")))
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // LeakCanary
 //    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"

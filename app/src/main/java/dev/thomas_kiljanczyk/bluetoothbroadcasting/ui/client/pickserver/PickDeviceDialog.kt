@@ -1,7 +1,9 @@
-package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client
+package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pickserver
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -11,36 +13,31 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
+import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.shared.AppAlertDialog
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.GmsNearbyServerDeviceItem
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.MutablePickDeviceDialogUiState
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.PickDeviceDialogUiState
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pick_gms_server_device.PickDeviceDialogViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastingTheme
 
 @Composable
 fun PickDeviceDialog(
-    onDevicePicked: (endpointId: String) -> Unit,
+    onDevicePicked: (RemoteDevice) -> Unit,
     onDismiss: () -> Unit
 ) {
     val viewModel: PickDeviceDialogViewModel = hiltViewModel(key = "PickDeviceDialog")
-
-    LaunchedEffect(Unit) { viewModel.startDiscovery() }
-    DisposableEffect(Unit) {
-        onDispose { viewModel.stopDiscovery() }
-    }
+    val devices by viewModel.discoveredDevices.collectAsStateWithLifecycle()
 
     PickDeviceDialog(
-        state = viewModel.state,
+        devices = devices,
+        emptyHint = viewModel.emptyHint,
         onDevicePicked = onDevicePicked,
         onDismiss = onDismiss
     )
@@ -48,31 +45,35 @@ fun PickDeviceDialog(
 
 @Composable
 fun PickDeviceDialog(
-    state: PickDeviceDialogUiState,
-    onDevicePicked: (endpointId: String) -> Unit,
+    devices: List<RemoteDevice>,
+    @StringRes emptyHint: Int,
+    onDevicePicked: (RemoteDevice) -> Unit,
     onDismiss: () -> Unit
 ) {
     AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_fragment_pick_device_title)) },
         text = {
-            if (state.discoveredDevices.isEmpty()) {
-                Box(
+            if (devices.isEmpty()) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     CircularProgressIndicator()
+                    Text(text = stringResource(emptyHint), textAlign = TextAlign.Center)
                 }
             } else {
                 LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
-                    items(state.discoveredDevices) { device ->
+                    items(devices, key = { it.id }) { device ->
                         Text(
-                            text = device.deviceName,
+                            text = device.name
+                                ?: stringResource(R.string.placeholder_server_device),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onDevicePicked(device.endpointId) }
+                                .clickable { onDevicePicked(device) }
                                 .padding(vertical = 12.dp)
                         )
                     }
@@ -93,7 +94,8 @@ fun PickDeviceDialog(
 private fun PickDeviceDialogLoadingPreview() {
     BluetoothBroadcastingTheme {
         PickDeviceDialog(
-            state = MutablePickDeviceDialogUiState(),
+            devices = emptyList(),
+            emptyHint = R.string.dialog_fragment_pick_device_title,
             onDevicePicked = {},
             onDismiss = {}
         )
@@ -105,12 +107,11 @@ private fun PickDeviceDialogLoadingPreview() {
 private fun PickDeviceDialogWithDevicesPreview() {
     BluetoothBroadcastingTheme {
         PickDeviceDialog(
-            state = MutablePickDeviceDialogUiState().apply {
-                discoveredDevices = listOf(
-                    GmsNearbyServerDeviceItem("Living Room TV", "endpoint-1"),
-                    GmsNearbyServerDeviceItem("Bedroom Speaker", "endpoint-2")
-                )
-            },
+            devices = listOf(
+                RemoteDevice("endpoint-1", "Living Room TV"),
+                RemoteDevice("endpoint-2", "Bedroom Speaker")
+            ),
+            emptyHint = R.string.dialog_fragment_pick_device_title,
             onDevicePicked = {},
             onDismiss = {}
         )
