@@ -38,8 +38,11 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ServerScreen(
+    title: String,
+    viewModel: ServerViewModel,
     onNavigateUp: () -> Unit,
-    viewModel: ServerViewModel
+    maxMessageBytes: Int? = null,
+    hint: String? = null
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -61,7 +64,10 @@ fun ServerScreen(
     }
 
     ServerScreen(
+        title = title,
         state = viewModel.state,
+        maxMessageBytes = maxMessageBytes,
+        hint = hint,
         snackbarHostState = snackbarHostState,
         onNavigateUp = onNavigateUp,
         onStartServer = viewModel::startServer,
@@ -73,7 +79,10 @@ fun ServerScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServerScreen(
+    title: String,
     state: ServerUiState,
+    maxMessageBytes: Int? = null,
+    hint: String? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onNavigateUp: () -> Unit,
     onStartServer: () -> Unit,
@@ -82,7 +91,7 @@ fun ServerScreen(
 ) {
     val scope = rememberCoroutineScope()
     var messageText by remember { mutableStateOf("") }
-    val fits = state.fits(messageText)
+    val fits = fitsByteLimit(messageText, maxMessageBytes)
 
     val messageSentText = stringResource(R.string.activity_server_message_sent)
     val messageNotSentText = stringResource(R.string.activity_server_message_not_sent)
@@ -90,7 +99,7 @@ fun ServerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.label_server_activity)) },
+                title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
@@ -118,9 +127,9 @@ fun ServerScreen(
                     stringResource(R.string.activity_server_server_off)
             )
 
-            state.hint?.let {
+            hint?.let {
                 Text(
-                    text = stringResource(it),
+                    text = it,
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
@@ -152,7 +161,7 @@ fun ServerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 isError = !fits,
-                supportingText = state.maxMessageBytes?.let { max ->
+                supportingText = maxMessageBytes?.let { max ->
                     {
                         Text(
                             stringResource(
@@ -185,6 +194,7 @@ fun ServerScreen(
 private fun ServerScreenOffPreview() {
     BluetoothBroadcastingTheme {
         ServerScreen(
+            title = "Bluetooth server",
             state = MutableServerUiState(),
             onNavigateUp = {},
             onStartServer = {},
@@ -199,6 +209,7 @@ private fun ServerScreenOffPreview() {
 private fun ServerScreenStartingPreview() {
     BluetoothBroadcastingTheme {
         ServerScreen(
+            title = "Bluetooth server",
             state = MutableServerUiState().apply { isStartingServer = true },
             onNavigateUp = {},
             onStartServer = {},
@@ -213,7 +224,10 @@ private fun ServerScreenStartingPreview() {
 private fun ServerScreenLimitedPreview() {
     BluetoothBroadcastingTheme {
         ServerScreen(
-            state = MutableServerUiState(maxMessageBytes = 150).apply { isServerOn = true },
+            title = "BLE advertising server",
+            state = MutableServerUiState().apply { isServerOn = true },
+            maxMessageBytes = 150,
+            hint = "Clients receive without connecting.",
             onNavigateUp = {},
             onStartServer = {},
             onStopServer = {},
@@ -227,6 +241,7 @@ private fun ServerScreenLimitedPreview() {
 private fun ServerScreenOnPreview() {
     BluetoothBroadcastingTheme {
         ServerScreen(
+            title = "Bluetooth server",
             state = MutableServerUiState().apply { isServerOn = true },
             onNavigateUp = {},
             onStartServer = {},

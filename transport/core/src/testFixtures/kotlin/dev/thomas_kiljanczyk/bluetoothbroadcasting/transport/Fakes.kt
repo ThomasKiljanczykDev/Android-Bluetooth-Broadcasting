@@ -7,10 +7,7 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 
-class FakeBroadcastServer(
-    override val maxMessageBytes: Int? = null,
-    override val hint: Int? = null
-) : BroadcastServer {
+class FakeBroadcastServer : BroadcastServer {
     override val state = MutableStateFlow(ServerState.Stopped)
     override val events = MutableSharedFlow<ServerEvent>(extraBufferCapacity = 16)
 
@@ -31,22 +28,15 @@ class FakeBroadcastServer(
     }
 }
 
-class FakeBroadcastClient(
-    override val requiresServerPick: Boolean = true
-) : BroadcastClient {
+class FakeBroadcastClient : BroadcastClient {
     override val state = MutableStateFlow<ClientState>(ClientState.Disconnected)
-    override val messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 16)
+    override val messages = MutableSharedFlow<String>(extraBufferCapacity = 16)
 
     val connectRequests = mutableListOf<RemoteDevice>()
-    var listenCount = 0
     var disconnectCount = 0
 
     override fun connect(device: RemoteDevice) {
         connectRequests += device
-    }
-
-    override fun listen() {
-        listenCount++
     }
 
     override fun disconnect() {

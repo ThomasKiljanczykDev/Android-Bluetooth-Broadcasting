@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.R
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
@@ -29,10 +28,10 @@ import dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.theme.BluetoothBroadcastin
 
 @Composable
 fun PickDeviceDialog(
+    viewModel: PickDeviceDialogViewModel,
     onDevicePicked: (RemoteDevice) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val viewModel: PickDeviceDialogViewModel = hiltViewModel(key = "PickDeviceDialog")
     val devices by viewModel.discoveredDevices.collectAsStateWithLifecycle()
 
     PickDeviceDialog(

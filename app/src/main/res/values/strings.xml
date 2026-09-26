@@ -1,7 +1,30 @@
 <resources>
     <string name="app_name">Bluetooth Broadcast</string>
-    <string name="label_client_activity">Bluetooth Client</string>
-    <string name="label_server_activity">Bluetooth Server</string>
+
+    <string name="ble_card_title">BLE advertising</string>
+    <string name="ble_card_subtitle">No connection · any number of listeners</string>
+    <string name="ble_server_title">BLE advertising server</string>
+    <string name="ble_client_title">BLE advertising client</string>
+    <string name="ble_server_hint">Clients receive advertised messages without connecting. Client connections are not reported.</string>
+    <string name="ble_client_listen">Listen</string>
+    <string name="ble_client_stop_listening">Stop listening</string>
+    <string name="ble_client_not_listening">Not listening</string>
+    <string name="ble_client_scanning">Scanning for servers… Start the server on the other device.</string>
+    <string name="ble_client_no_message">No message yet</string>
+    <plurals name="ble_client_listening_servers">
+        <item quantity="one">Listening (%d server)</item>
+        <item quantity="other">Listening (%d servers)</item>
+    </plurals>
+
+    <string name="rfcomm_card_title">Bluetooth</string>
+    <string name="rfcomm_card_subtitle">Paired devices · RFCOMM</string>
+    <string name="rfcomm_server_title">Bluetooth server</string>
+    <string name="rfcomm_client_title">Bluetooth client</string>
+
+    <string name="nearby_card_title">Nearby</string>
+    <string name="nearby_card_subtitle">Google Nearby Connections</string>
+    <string name="nearby_server_title">Nearby server</string>
+    <string name="nearby_client_title">Nearby client</string>
 
     <string name="activity_main_btn_client">Client</string>
     <string name="activity_main_btn_server">Server</string>
@@ -14,14 +37,6 @@
     <string name="activity_client_connected">Connected (%s)</string>
     <string name="activity_client_no_content">No content yet</string>
     <string name="activity_client_disconnect">Disconnect</string>
-    <string name="activity_client_listen">Listen</string>
-    <string name="activity_client_stop_listening">Stop listening</string>
-    <string name="activity_client_not_listening">Not listening</string>
-    <string name="activity_client_listening">Listening…</string>
-    <plurals name="activity_client_listening_servers">
-        <item quantity="one">Listening (%d server)</item>
-        <item quantity="other">Listening (%d servers)</item>
-    </plurals>
 
     <string name="activity_server_start_server">Start server</string>
     <string name="activity_server_server_off">Server OFF</string>
@@ -39,23 +54,18 @@
 
     <string name="dialog_fragment_close">Close</string>
 
-    <string name="dialog_unavailable_exit_app">Exit app</string>
-
     <string name="dialog_fragment_pick_device_title">Pick server device</string>
     <string name="dialog_fragment_permissions_denied_message">
-        This app requires bluetooth permissions in order to work.
-        You have rejected previous permissions request.
-        Please go to settings to grant necessary permission to the app.
+        Permissions were denied. Grant them in app settings to use this transport.
     </string>
     <string name="dialog_fragment_permissions_denied_go_to_settings">Go to settings</string>
 
     <string name="dialog_fragment_permissions_request_message">
-        This app requires bluetooth permissions in order to work.
-        Proceed to check permissions.
+        This transport requires additional permissions. Proceed to grant them.
     </string>
     <string name="dialog_fragment_permissions_request_proceed">Proceed</string>
 
-    <string name="dialog_fragment_permission_close_app">Close app</string>
+    <string name="dialog_fragment_permission_cancel">Cancel</string>
 
     <string name="placeholder_server_device">Unknown device</string>
 

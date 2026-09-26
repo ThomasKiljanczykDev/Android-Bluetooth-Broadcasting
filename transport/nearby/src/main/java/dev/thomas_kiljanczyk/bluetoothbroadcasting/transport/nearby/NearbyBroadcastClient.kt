@@ -8,9 +8,9 @@ import com.google.android.gms.nearby.connection.ConnectionsClient
 import com.google.android.gms.nearby.connection.Payload
 import com.google.android.gms.nearby.connection.PayloadCallback
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate
+import dagger.hilt.android.scopes.ViewModelScoped
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.BroadcastClient
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ClientState
-import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ReceivedMessage
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.TransportScope
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+@ViewModelScoped
 class NearbyBroadcastClient @Inject constructor(
     private val connectionsClient: ConnectionsClient,
     private val localEndpointName: LocalEndpointName,
@@ -32,14 +33,12 @@ class NearbyBroadcastClient @Inject constructor(
     private val _state = MutableStateFlow<ClientState>(ClientState.Disconnected)
     override val state: StateFlow<ClientState> = _state
 
-    private val _messages = MutableSharedFlow<ReceivedMessage>(extraBufferCapacity = 16)
-    override val messages: Flow<ReceivedMessage> = _messages
+    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    override val messages: Flow<String> = _messages
 
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            val bytes = payload.asBytes() ?: return
-            val sender = (_state.value as? ClientState.Connected)?.device ?: RemoteDevice(endpointId, null)
-            _messages.tryEmit(ReceivedMessage(sender, bytes.decodeToString()))
+            payload.asBytes()?.let { _messages.tryEmit(it.decodeToString()) }
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {}

@@ -3,16 +3,14 @@ package dev.thomas_kiljanczyk.bluetoothbroadcasting.ui.client.pickserver
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.RemoteDevice
 import dev.thomas_kiljanczyk.bluetoothbroadcasting.transport.ServerDiscovery
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
-@HiltViewModel
-class PickDeviceDialogViewModel @Inject constructor(
+/** Subclassed per transport with a concrete [ServerDiscovery]. */
+open class PickDeviceDialogViewModel(
     discovery: ServerDiscovery
 ) : ViewModel() {
     @StringRes

@@ -17,7 +17,8 @@ class NearbyTransportRequirements @Inject constructor(
 
     override val runtimePermissions: Array<String> = buildList {
         val sdk = Build.VERSION.SDK_INT
-        if (sdk <= Build.VERSION_CODES.P) add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        // API 31 ignores a FINE request without COARSE.
+        if (sdk <= Build.VERSION_CODES.P || sdk == Build.VERSION_CODES.S) add(Manifest.permission.ACCESS_COARSE_LOCATION)
         if (sdk in Build.VERSION_CODES.Q..Build.VERSION_CODES.S) add(Manifest.permission.ACCESS_FINE_LOCATION)
         if (sdk >= Build.VERSION_CODES.S) {
             add(Manifest.permission.BLUETOOTH_ADVERTISE)

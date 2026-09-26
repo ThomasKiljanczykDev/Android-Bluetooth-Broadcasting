@@ -1,4 +1,0 @@
-<resources>
-    <string name="transport_bluetooth_unavailable">This device has no Bluetooth.</string>
-    <string name="transport_bluetooth_discovery_hint">Searching paired devices… Pair the server device in system Bluetooth settings first.</string>
-</resources>

@@ -13,29 +13,11 @@ android {
 
     defaultConfig {
         applicationId = "dev.thomas_kiljanczyk.bluetoothbroadcasting"
-        minSdk = 25
+        minSdk = 26
         compileSdk = 37
         targetSdk = 37
         versionCode = major * 100000000 + minor * 10000 + patch
         versionName = "$major.$minor.$patch"
-    }
-
-    flavorDimensions += "transport"
-    productFlavors {
-        create("bluetooth") {
-            dimension = "transport"
-            applicationIdSuffix = ".bluetooth"
-            isDefault = true
-        }
-        create("nearby") {
-            dimension = "transport"
-            applicationIdSuffix = ".nearby"
-        }
-        create("ble") {
-            dimension = "transport"
-            applicationIdSuffix = ".ble"
-            minSdk = 26
-        }
     }
 
     buildTypes {
@@ -63,9 +45,9 @@ dependencies {
     // App dependencies
     implementation(libs.kotlinx.coroutines.android)
     implementation(project(":transport:core"))
-    "bluetoothImplementation"(project(":transport:bluetooth"))
-    "nearbyImplementation"(project(":transport:nearby"))
-    "bleImplementation"(project(":transport:ble"))
+    implementation(project(":transport:ble"))
+    implementation(project(":transport:rfcomm"))
+    implementation(project(":transport:nearby"))
 
     // AndroidX
     implementation(libs.androidx.coreKtx)
